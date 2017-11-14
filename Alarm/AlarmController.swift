@@ -14,7 +14,7 @@ class AlarmController {
     static let shared = AlarmController()
     
     init() {
-        loadFromPersistentStorage()
+        alarms = loadFromPersistentStorage()
     }
     
     // MARK: Model Controller Methods
@@ -43,31 +43,44 @@ class AlarmController {
         saveToPersistentStorage()
     }
     
-    // MARK: Load/Save
+    // MARK: - Persistence
     
-    private func saveToPersistentStorage() {
-        guard let filePath = type(of: self).persistentAlarmsFilePath else { return }
-        NSKeyedArchiver.archiveRootObject(self.alarms, toFile: filePath)
+    func fileURL() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let documentsDirectory = paths[0]
+        let filename = "alarms.json"
+        let fullURL = documentsDirectory.appendingPathComponent(filename)
+        return fullURL
     }
     
-    private func loadFromPersistentStorage() {
-        guard let filePath = type(of: self).persistentAlarmsFilePath else { return }
-        guard let alarms = NSKeyedUnarchiver.unarchiveObject(withFile: filePath) as? [Alarm] else { return }
-        self.alarms = alarms
+    func saveToPersistentStorage() {
+        let je = JSONEncoder()
+        do {
+            let data =  try je.encode(alarms)
+            print(data)
+            print(String(data: data, encoding: .utf8)!)
+            try data.write(to: fileURL())
+        } catch let error {
+            print("Error saving playlist \(error)")
+        }
     }
     
-    // MARK: Helpers
-    
-    static private var persistentAlarmsFilePath: String? {
-        let directories = NSSearchPathForDirectoriesInDomains(.documentDirectory, .allDomainsMask, true)
-        guard let documentsDirectory = directories.first as NSString? else { return nil }
-        return documentsDirectory.appendingPathComponent("Alarms.plist")
+    func loadFromPersistentStorage() -> [Alarm] {
+        do {
+            let data = try Data(contentsOf: fileURL())
+            let jd = JSONDecoder()
+            let playlists = try jd.decode([Alarm].self, from: data)
+            return playlists
+        } catch let error {
+            print("Error loading data from disk \(error)")
+        }
+        return []
     }
     
     // MARK: Properties
     
     var alarms: [Alarm] = []
-
+    
 }
 
 // MARK: - AlarmScheduler
@@ -102,3 +115,4 @@ extension AlarmScheduler {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [alarm.uuid])
     }
 }
+

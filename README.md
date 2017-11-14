@@ -1,6 +1,6 @@
 # Alarm
 
-Students will build a simple alarm app to practice intermediate table view features, protocols, the delegate pattern, NSCoding, and UserNotifications.
+Students will build a simple alarm app to practice intermediate table view features, protocols, the delegate pattern, Codable, and UserNotifications.
 
 Students who complete this project independently are able to:
 
@@ -15,11 +15,12 @@ Students who complete this project independently are able to:
 * Work with `Date` and `Calendar`
 * Add staged data to a model object controller
 
-### Part Two - NSCoding, Protocol Extensions, UserNotifications
+### Part Two - Codable protocol, Protocol Extensions, UserNotifications
 
-* Create model objects that conform to the `NSCoding` protocol
-* Create model object controllers that use `NSKeyedArchiver` and `NSKeyedUnarchiver` for data persistence
-* Schedule and cancel `UserNotification`s 
+* Create model objects that conform to the `Codable` protocol
+* Add data persistence using the Codable protocol and write data to a local file path (URL).
+* Upon launch, decode the data returned from the local file path (URL) back into our custom model objects.
+* Schedule and cancel `UserNotification`s
 * Create custom protocols
 * Implement protocol functions using protocol extensions to define protcol function behavior across all conforming types
 
@@ -43,7 +44,7 @@ Set up a basic List-Detail view hierarchy using a UITableViewController for a Al
 
 Build a custom table view cell to display alarms. The cell should display the alarm time, the alarm name, and have a switch that will toggle whether or not the alarm is enabled.
 
-It is best practice to make table view cells reusable between apps. As a result, you will build a `SwitchTableViewCell` rather than an `AlarmTableViewCell` that can be reused any time you want a cell with a switch. 
+It is best practice to make table view cells reusable between apps. As a result, you will build a `SwitchTableViewCell` rather than an `AlarmTableViewCell` that can be reused any time you want a cell with a switch.
 
 1. Add a new `SwitchTableViewCell.swift` as a subclass of UITableViewCell.
 2. Configure the prototype cell in the Alarm List Scene in `Main.storyboard` to be an instance of `SwitchTableViewCell`
@@ -78,7 +79,7 @@ You have been given a file called `Alarm.swift` that contains your Alarm model o
 
 ### Controller Basics
 
-Create an `AlarmController` model object controller that will manage and serve `Alarm` objects to the rest of the application. 
+Create an `AlarmController` model object controller that will manage and serve `Alarm` objects to the rest of the application.
 
 1. Create an `AlarmController.swift` file and define a new `AlarmController` class.
 2. Add an `alarms` array property with an empty array as a default value.
@@ -87,12 +88,12 @@ Create an `AlarmController` model object controller that will manage and serve `
 5. Create a `delete(alarm: Alarm)` function that removes the alarm from the `alarms` array
 * note: There is no 'removeObject' function on arrays. You will need to find the index of the object and then remove the object at that index. Refer to documentation if you need to know how to find the index of an object.
 * note: If you face a compiler error, you may need to check that the `Equatable` protocol has been properly implemented for `Alarm` objects
-6. Create a static `shared` property that stores a shared instance. 
+6. Create a static `shared` property that stores a shared instance.
 * note: Review the syntax for creating shared instance properties
 
 ### Controller Staged Data Using a Mock Data Function
 
-Add mock alarm data to the AlarmController. Using mock data can be very useful. Once there is mock data development teams can serialize work -- i.e. some can work on the views with visible data while others work on implementing the controller logic. This is a quick way to get objects visible so you can begin building the views.
+Add mock alarm data to the AlarmController. Using mock data can be very useful. Once there is mock data, development teams can serialize work -- i.e. some can work on the views with visible data while others work on implementing the controller logic. This is a quick way to get objects visible so you can begin building the views.
 
 There are many ways to add mock data to model object controllers. We will do so using a computed property.
 
@@ -134,7 +135,7 @@ Create functions on the detail table view controller to display an existing alar
 
 1. Add an `alarm` property of type `Alarm?` to `AlarmDetailTableViewController`. This will hold an alarm if the view is displaying an existing alarm and will be nil if the view is being used to create a new alarm.
 2. Create a private `updateViews()` function that will populate the date picker and alarm title text field with the current alarm's date and title. This function will hide the enable button if `self.alarm` is nil, otherwise it will set the enable button to say "Disable" if the alarm in `self.alarm` is enabled and "Enable" if it is disabled. You may consider changing background color and font color properties as well to make the difference between the two button states clear.
-*note: You must guard against the alarm being nil, or the view controller's view not yet being loaded and properly handle these cases.
+*note: You must guard against the alarm being nil, or the view controller's view not yet being loaded and properly handle these cases.*
 3. Create a `didSet` property observer on the `alarm` property that checks if the view has been loaded, if it has, call `updateViews()`.
 4. In `viewDidLoad`, call `updateViews()` to display an alarm if there is an existing alarm. This will ensure that if the view hasn't been loaded by the time the `didSet` of the `alarm` in the previous step, the views will still be setup by the time the user is shown this view controller.
 
@@ -159,50 +160,57 @@ Fill in the `saveButtonTapped` function on the detail view so that you can add n
 3. If there is no alarm, call the `addAlarm(fireTimeFromMidnight:, name:)` function to create and add a new alarm.
 * note: You should be able to run the project and have what appears to be a fully functional app. You should be able to add, edit, delete, and enable/disable alarms. We have not yet covered how to alert the user when time is up, so that part will not work yet, but we'll get there.
 
-## Part Two - NSCoding, Protocol Extensions, UserNotifications
+## Part Two - Codable, Protocol Extensions, UserNotifications
 
-### Conform to the NSCoding Protocol
+### Conform to the Codable Protocol
 
-Make your `Alarm` object conforom to the NSCoding protocol so that we can persist alarms across app launches using NSKeyedArchiver and NSKeyedUnarchiver.
+Make your `Alarm` object conforom to the Codable protocol so that we can persist alarms across app launches.
 
-1. Adopt the NSCoding protocol and add the required `init?(coder aDecoder: NSCoder)` and `encode(with aCoder: NSCoder)` functions. You should review NSCoding in the documentation before continuing.
-2. Inside each, you will use the NSCoder provided from the initializer or function to either encode your properties using `encode(_:, forKey:)` or decode your properties using `decodeObject(forKey:)`. 
-* note: It is best practice to create static internal keys to use in encoding and decoding (ex. `private let NameKey = "name"`)
+1. Adopt the Codable protocol. *And that's it! If you are ok using the names of your properties as keys, that's all of the setup you'll need to do in your model to make it Codable. Cool Huh?*
 
 ### Persistence With NSKeyedArchiver and NSKeyedUnarchiver
 
-Add persistence using NSKeyedArchiver and NSKeyedUnarchiver to the `AlarmController`. Archiving is similar to working with UserDefaults, but uses NSCoders to serialize and deserialize objects instead of our `init?(dictionary: [String: Any])` and `dictionaryRepresentation` functions. Both are valuable to know and be comfortable with.
-
-NSKeyedArchiver serializes objects and saves them to a file on the device. NSKeyedUnarchiver pulls that file and deserializes the data back into our model objects.
+We need to serialize objects using a `JSONEncoder` and save them to a file on the device. Then, pull the data from that file and deserialize it back into our model objects.
 
 Because of the way that iOS implements security and sandboxing, each application has it's own 'Documents' directory that has a different path each time the application is launched. When you want to write to or read from that directory, you need to first search for the directory, then capture the path as a reference to use where needed.
 
-It is best to separate that logic into a separate function that returns the path. Here is an example function:
+It is best to separate that logic into a separate function that returns the path.
 
+##### Creating the URL
+1. Copy and paste this method into your project. Note that this method returns a URL. This is the URL for the file location where we will be saving our Data.
 ```
-static private var persistentAlarmsFilePath: String? {
-let directories = NSSearchPathForDirectoriesInDomains(.documentDirectory, .allDomainsMask, true)
-guard let documentsDirectory = directories.first as NSString? else { return nil }
-return documentsDirectory.appendingPathComponent("Alarms.plist")
+private func fileURL() -> URL {
+let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+let fileName = "alarms.json"
+let documentsDirectoryURL = urls[0].appendingPathComponent(fileName)
+return documentsDirectoryURL
 }
 ```
 
-This function accepts a string as a key and will return the path to a file in the Documents directory with that name. 
+##### Saving data to the URL
+1. Write a method called `saveToPersistentStorage()` that will save the current entries array to a file on disk. Implement this function to:
+1. Create an instance of `JSONEncoder`
+2. Call `encode(value: Encodable) throws` on your instance of the JSONEncoder, passing in the array of entries as an argument. You will need to assign the return of this function to a constant named `data`. _**NOTE - The objects in the array need to be `Codable` objects.** You need to go back to your Entry class and adopt the Codable protocol._
+3. You will also notice that this function throws. That means that if you call this function and it doesn't work the way it should, it will _`throw`_ an error. Functions that throw need to be marked with `try` in front of the function call. You will also need to put this call inside of a **do catch block** and `catch` the error that might be thrown. _Review the documentation if you need to learn about do catch blocks._
+4. You will also need to call `data.write(to: URL)` This function asks for a URL. We can pass in the `fileURL()` as an argument. This is the line of code that will actually write the data at the URL. *Hint - This  is also a throwing function.*
+2. Call `saveToPersistentStorage()` any time that the list of entries is modified
 
-1. Add a private, static, computed property called `persistentAlarmsFilePath` which returns the correct path to the alarms file in the app's documents directory as described above.
-2. Write a private function called `saveToPersistentStorage()` that will save the current alarms array to a file using NSKeyedArchiver
-* note: `NSKeyedArchiver.archiveRootObject(self.alarms, toFile: persistentAlarmsFilePath)`
-3. Write a function called `loadFromPersistentStorage()` that will load saved Alarm objects and set self.alarms to the results
-* note: Capture the data using `NSKeyedUnarchiver.unarchiveObject(withFile: persistentAlarmsFilePath)`, unwrap the Optional results and set self.alarms
-4. Call the `loadFromPersistentStorage()` function when the AlarmController is initialized
-5. Call the `saveToPersistentStorage()` any time that the list of alarms is modified
+##### Loading data from the URL
+1. Write a method called `loadFromPersistentStorage()` that will load the current data from the file on disk where we saved our entries(data). Implement this function to:
+1. Create an instance of `JSONDecoder`
+2. Create a constant called `data` to hold the data that you will get back by calling `Data(contentsOf:)`. You will need to pass in the `fileURL()` as an argument. _(This is a throwing function)_
+3. Call `decode(from:)` on your instance of the JSONDecoder. You will need to assign the return of this function to a constant named `entries`. This function takes in two arguments: a type `[Entry].self`, and your instance of data. It will decode the data into an array of Entry.
+4. Now set self.entries to this array of entries.
+
+2. Call the `loadFromPersistentStorage()` function when the `AlarmController` is initialized
+3. Call the `saveToPersistentStorage()` any time that the list of alarms is modified
 * note: You should now be able to see that your alarms are saved between app launches.
 
 ### Register the App for UserNotifications
 
 Register for local notifications when the app launches.
 
-1. In the `AppDelegate.swift` file import `UserNotifications`. Then in the `application(_:didFinishLaunchingWithOptions:)` function, request notification authorization on an instance of `UNUserNotificationCenter`. 
+1. In the `AppDelegate.swift` file import `UserNotifications`. Then in the `application(_:didFinishLaunchingWithOptions:)` function, request notification authorization on an instance of `UNUserNotificationCenter`.
 * note: Use `UNUserNotificationCenter.current()` to get an instance of `UNUserNotificationCenter`
 
 ### Schedule and Cancel Local Notifications using a Custom Protocol and Extension
@@ -213,10 +221,10 @@ You will need to schedule local notifications each time you enable an alarm and 
 2. Below your protocol, create a protocol extension, `extension AlarmScheduler`. In there, you can create default implementations for the two protocol functions.
 3. Your `scheduleUserNotifications(for alarm: Alarm)` function should create an instance of `UNMutableNotificationContent` and then give that instance a title and body. You can also give that instance a default sound to use when the notification goes off using `UNNotificationSound.default()`.
 4. After you create your `UNMutableNotificationContent`, create an instance of `UNCalendarNotificationTrigger`. In order to do this you will need to create `DateComponents` using the `fireDate` of your `alarm`.
-* note: Be sure to set `repeats` in the `UNCalendarNotificationTrigger` initializer to `true` so that the alarm will repeat daily at the specified time. 
+* note: Be sure to set `repeats` in the `UNCalendarNotificationTrigger` initializer to `true` so that the alarm will repeat daily at the specified time.
 5. Now that you have `UNMutableNotificationContent` and a `UNCalendarNotificationTrigger`, you can initialize a `UNNotificationRequest` and add the request to the notification center object of your app.
 * note: In order to initialize a `UNNotificationRequest` you will need a unique identifier. If you want to schedule multiple requests (which we do with this app) then you need a different identifier for each request. Thus, use the `uuid` property on your `Alarm` object as the identifier.
-6. Your `cancelLocalnotification(for alarm: Alarm)` function simply needs to remove pending notification requests using the `uuid` property on the `Alarm` object you pass into the function. 
+6. Your `cancelLocalnotification(for alarm: Alarm)` function simply needs to remove pending notification requests using the `uuid` property on the `Alarm` object you pass into the function.
 * note: Look at documentation for `UNUserNotificationCenter` and see if there are any functions that will help you do this.
 7. Now go to your list view controller and detail view controller and make them conform to the `AlarmScheduler` protocol. Notice how the compiler does not make you implement the schedule and cancel functions from the protocol? This is because by adding an extension to the protocol, we have created the implementation of these functions for all classes that conform to the protocol.
 8. Go to your `AlarmListTableViewController`. In your `switchCellSwitchValueChanged` function, you will need to schedule a notification if the switch is being turned on, and cancel the notification if the switch is being turned off. You will also need to cancel the notification when you delete an alarm.
@@ -241,4 +249,3 @@ Please refer to CONTRIBUTING.md.
 ## Copyright
 
 © DevMountain LLC, 2015-2016. Unauthorized use and/or duplication of this material without express and written permission from DevMountain, LLC is strictly prohibited. Excerpts and links may be used, provided that full and clear credit is given to DevMountain with appropriate and specific direction to the original content.
-
